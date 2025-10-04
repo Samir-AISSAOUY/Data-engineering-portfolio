@@ -1,4 +1,3 @@
-````markdown
 # 🚖 NYC Taxi Lakehouse Project  
 ### A Complete End-to-End Data Engineering Pipeline with PySpark, Delta Lake, and MinIO
 ---
