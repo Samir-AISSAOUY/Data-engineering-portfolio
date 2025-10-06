@@ -20,6 +20,7 @@ The entire environment is containerized with **Docker Compose**:
 - **VS Code / Jupyter** – for data exploration and analysis  
 
 *Architecture Diagram:*  
+```mermaid
 flowchart LR
   %% ===== Groups =====
   subgraph DC[Docker Compose Environment]
