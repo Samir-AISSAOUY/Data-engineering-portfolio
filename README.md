@@ -1,309 +1,255 @@
+```markdown
 # 🚖 NYC Taxi Lakehouse — End-to-End Data Engineering Project
 
 ### *(Docker • Airflow • Spark • Delta Lake • MinIO • Trino • Power BI)*
 
 ---
 
-## Overview
+## 🚀 Introduction
 
-This project implements a **modern Lakehouse architecture** based on the **Medallion pattern** — enabling data engineers to build an end-to-end data pipeline with **ACID Delta tables**, **distributed Spark jobs**, **S3-compatible object storage (MinIO)**, and **SQL analytics via Trino**.
+**NYC Taxi Lakehouse** est un projet de bout en bout démontrant la mise en place d’une **architecture Data Lakehouse moderne** à partir des données publiques **NYC Taxi Trips**.
 
-The orchestration is managed by **Apache Airflow**, while **Power BI** provides interactive dashboards over the final *Gold* analytics layer.
+L’objectif est de construire une plateforme **scalable**, **fiable** et **analytique-ready**, simulant un environnement cloud local avec :
+- stockage objet S3 (via MinIO),
+- tables ACID Delta Lake,
+- orchestration Airflow,
+- traitement distribué Spark,
+- exploration SQL avec Trino,
+- visualisation Power BI.
 
----
-
-## Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   Orchestration Layer                       │
-│     Apache Airflow  →  Schedules & monitors ETL pipelines    │
-├─────────────────────────────────────────────────────────────┤
-│                     Compute Layer                            │
-│     Apache Spark  →  Executes ETL jobs (Bronze → Silver → Gold)
-├─────────────────────────────────────────────────────────────┤
-│                      Storage Layer                           │
-│     MinIO (S3)     →  Object store for all Delta tables      │
-│     Delta Lake     →  ACID & versioned table format          │
-│     Hive Metastore →  Central schema catalog for Spark/Trino │
-├─────────────────────────────────────────────────────────────┤
-│                      Query & Visualization                   │
-│     Trino          →  Unified SQL engine (reads Delta/Parquet)
-│     Power BI       →  Dashboard on Gold layer KPIs           │
-└─────────────────────────────────────────────────────────────┘
-```
+> 🧭 *Cas d’usage métier : analyser le trafic taxi à New York — volume de trajets, revenus, distances moyennes et tendances temporelles.*
 
 ---
 
-## Technologies
+## 🧠 Architecture Conceptuelle
 
-| Layer                | Tool                                               | Purpose                              |
-| :------------------- | :------------------------------------------------- | :----------------------------------- |
-| **Orchestration**    | [Apache Airflow](https://airflow.apache.org/)      | DAG scheduling & pipeline monitoring |
-| **Processing**       | [Apache Spark](https://spark.apache.org/)          | Distributed data transformation      |
-| **Storage**          | [MinIO](https://min.io/)                           | S3-compatible object storage         |
-| **Table Format**     | [Delta Lake](https://delta.io/)                    | ACID tables & time travel            |
-| **Metadata**         | Hive Metastore                                     | Shared catalog between Spark & Trino |
-| **SQL Engine**       | [Trino](https://trino.io/)                         | Query Delta tables via SQL           |
-| **Visualization**    | [Power BI](https://powerbi.microsoft.com/)         | BI dashboards                        |
-| **Containerization** | [Docker Compose](https://docs.docker.com/compose/) | Local deployment environment         |
-
----
-
-## Medallion Data Pipeline
-
-| Layer         | Description                                   | Example Path                      |
-| ------------- | --------------------------------------------- | --------------------------------- |
-| 🥉 **Bronze** | Raw data ingestion (CSV/Parquet)              | `s3a://lake/bronze/trips`         |
-| 🥈 **Silver** | Cleaned & standardized data (schema enforced) | `s3a://lake/silver/trips_cleaned` |
-| 🥇 **Gold**   | Aggregated metrics & business-ready tables    | `s3a://lake/gold/trips_metrics`   |
-
-**Flow:**
-
-```
+Le pipeline suit le **Medallion Pattern** :  
 Raw → Bronze → Silver → Gold → Power BI
+
 ```
+
+Airflow ─► Spark ─► Delta Lake (MinIO S3)
+│
+▼
+Trino / Power BI
+
+```
+
+### 🥇 Méthodologie
+
+| Layer | Description | Exemple de traitement |
+|-------|--------------|----------------------|
+| 🥉 **Bronze** | Données brutes ingérées depuis les fichiers Parquet/CSV | Ingestion simple & stockage Delta |
+| 🥈 **Silver** | Données nettoyées, typées et enrichies | Standardisation des schémas, suppression des nulls |
+| 🥇 **Gold** | Tables métiers prêtes à l’analyse | Calcul d’agrégats et KPIs quotidiens |
 
 ---
 
-## Project Structure
+## ⚙️ Architecture Technique
+
+| Couche | Outil | Rôle / Valeur ajoutée |
+| :------ | :----- | :------------------ |
+| **Orchestration** | [Apache Airflow](https://airflow.apache.org/) | Gestion des dépendances et planification des ETL |
+| **Traitement distribué** | [Apache Spark](https://spark.apache.org/) | Transformation et agrégation des données à grande échelle |
+| **Format de table** | [Delta Lake](https://delta.io/) | Transactions ACID, versioning et time travel |
+| **Stockage objet** | [MinIO](https://min.io/) | S3-compatible pour environnement cloud-like |
+| **Catalogue** | Hive Metastore | Schéma partagé entre Spark et Trino |
+| **SQL Engine** | [Trino](https://trino.io/) | Requêtes SQL unifiées sur Delta Lake |
+| **BI / Visualisation** | [Power BI](https://powerbi.microsoft.com/) | Tableau de bord analytique |
+| **Infra** | [Docker Compose](https://docs.docker.com/compose/) | Déploiement local reproductible |
+
+---
+
+## 📥 Data Sources
+
+Le projet s’appuie sur les données publiques de la **NYC Taxi & Limousine Commission (TLC)**.  
+Elles contiennent l’ensemble des courses de taxis jaunes à New York, leurs tarifs, distances et zones géographiques.
+
+### 🗂️ Données utilisées
+
+| Fichier | Description | Format | Source |
+|----------|--------------|---------|---------|
+| `yellow_tripdata_2023-01.parquet` → `yellow_tripdata_2023-06.parquet` | Courses de taxi (janvier à juin 2023) | Parquet | [TLC Trip Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page) |
+| `taxi_zone_lookup.csv` | Référentiel des zones géographiques | CSV | [TLC Zone Lookup](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page) |
+
+### 📂 Structure locale
+
+```
+
+data/
+├── raw/
+│   ├── yellow_tripdata_2023-01.parquet
+│   ├── yellow_tripdata_2023-02.parquet
+│   ├── ...
+│   └── taxi_zone_lookup.csv
+├── bronze/
+├── silver/
+└── gold/
+
+````
+
+> Les fichiers bruts sont ingérés depuis `data/raw/` vers le bucket MinIO (`s3a://lake/bronze/`).
+
+### 📜 Téléchargement (Windows CMD)
+
+```bash
+cd C:\Users\Samir SC\Desktop\Lakehouse_projet\01_lakehouse\data\raw
+
+:: Télécharger les 6 premiers mois de 2023
+for %m in (01 02 03 04 05 06) do (
+    curl -L -o yellow_tripdata_2023-%m.parquet https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2023-%m.parquet
+)
+
+:: Référentiel des zones
+curl -L -o taxi_zone_lookup.csv https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv
+````
+
+### 🌍 Colonnes principales
+
+| Colonne                        | Type      | Description                          |
+| ------------------------------ | --------- | ------------------------------------ |
+| `tpep_pickup_datetime`         | Timestamp | Heure de départ                      |
+| `tpep_dropoff_datetime`        | Timestamp | Heure d’arrivée                      |
+| `passenger_count`              | Int       | Nombre de passagers                  |
+| `trip_distance`                | Float     | Distance parcourue (miles)           |
+| `fare_amount`                  | Float     | Montant de la course                 |
+| `tip_amount`                   | Float     | Pourboire                            |
+| `total_amount`                 | Float     | Montant total payé                   |
+| `PULocationID`, `DOLocationID` | Int       | Zones géographiques (pickup/dropoff) |
+
+---
+
+## 📦 Structure du Projet
 
 ```
 nyc-taxi-lakehouse/
-│
-├── dags/                     # Airflow DAGs
-│   └── nyc_taxi_lakehouse.py
-│
-├── jobs/                     # PySpark ETL jobs
+├── dags/                   # DAGs Airflow (Bronze → Silver → Gold)
+├── jobs/                   # Scripts PySpark d’ingestion et de transformation
 │   ├── 01_bronze_ingest.py
 │   ├── 02_silver_transform.py
 │   └── 03_gold_agg.py
-│
-├── trino/
-│   └── catalog/
-│       ├── delta.properties
-│       └── hive.properties
-│
-├── docker-compose.yml         # All services
-├── spark-defaults.conf
+├── trino/catalog/           # Configurations Delta & Hive
+├── data/                    # Données locales (raw, bronze, silver, gold)
+├── docker-compose.yml        # Stack complète
 └── README.md
 ```
 
 ---
 
-## Docker Compose Environment
+## 🧩 Fonctionnalités Clés
 
-### Services
-
-| Service          | Description                | Port        |
-| ---------------- | -------------------------- | ----------- |
-| `spark-master`   | Spark Master node          | 7077 / 8080 |
-| `spark-worker`   | Spark executors            | —           |
-| `minio`          | Object store               | 9000 / 9001 |
-| `hive-metastore` | Central catalog            | 9083        |
-| `airflow`        | Orchestrator UI            | 8088        |
-| `trino`          | SQL query engine           | 8080        |
-| `postgres`       | DB for Airflow & Metastore | —           |
+* ✅ Orchestration complète du pipeline via Airflow
+* ✅ Tables Delta Lake ACID avec *time travel*
+* ✅ Stockage objet S3 local (MinIO)
+* ✅ Exploration SQL avec Trino
+* ✅ Visualisation Power BI connectée au Gold Layer
+* ✅ Compatible Cloud AWS (S3, EMR, MWAA)
 
 ---
 
-## Getting Started
+## 🧱 Déploiement Local
 
-### 1️ Clone Repository
+### 1️⃣ Cloner le projet
 
 ```bash
 git clone https://github.com/<your-username>/nyc-taxi-lakehouse.git
 cd nyc-taxi-lakehouse
 ```
 
-### 2️ Start the Stack
+### 2️⃣ Démarrer l’environnement
 
 ```bash
 docker compose up -d --build
 ```
 
-### 3️ Access Web UIs
+### 3️⃣ Accéder aux interfaces
 
-| Service       | URL                                            | Default Credentials  |
-| ------------- | ---------------------------------------------- | -------------------- |
-| Airflow       | [http://localhost:8088](http://localhost:8088) | `admin / admin`      |
-| Spark UI      | [http://localhost:8080](http://localhost:8080) | —                    |
-| MinIO Console | [http://localhost:9001](http://localhost:9001) | `minio / minio12345` |
-| Trino Console | [http://localhost:8080](http://localhost:8080) | SQL UI               |
-| Power BI      | Connect via ODBC/JDBC → `localhost:8080`       | —                    |
+| Service           | URL                                            | Identifiants         |
+| ----------------- | ---------------------------------------------- | -------------------- |
+| **Airflow**       | [http://localhost:8088](http://localhost:8088) | `admin / admin`      |
+| **Spark UI**      | [http://localhost:4040](http://localhost:4040) | —                    |
+| **MinIO Console** | [http://localhost:9001](http://localhost:9001) | `minio / minio12345` |
+| **Trino UI**      | [http://localhost:8080](http://localhost:8080) | —                    |
 
 ---
 
-## Running the Pipeline
+## ⚡ Exécution du Pipeline
 
-### Step 1: Raw Data → Bronze
-
-```bash
-/opt/bitnami/spark/bin/spark-submit \
-  --master spark://spark-master:7077 \
-  /opt/jobs/01_bronze_ingest.py
-```
-
-### Step 2: Bronze → Silver
+### Étapes manuelles
 
 ```bash
+spark-submit /opt/jobs/01_bronze_ingest.py
 spark-submit /opt/jobs/02_silver_transform.py
-```
-
-### Step 3: Silver → Gold
-
-```bash
 spark-submit /opt/jobs/03_gold_agg.py
 ```
 
-> ✅ Airflow DAG `nyc_taxi_lakehouse` automates these steps sequentially.
+### Ou via Airflow DAG
 
----
+Le DAG `nyc_taxi_lakehouse` orchestre automatiquement :
 
-## Trino Catalog Configuration
-
-### `trino/catalog/delta.properties`
-
-```ini
-connector.name=delta-lake
-hive.metastore.uri=thrift://hive-metastore:9083
-fs.native-s3.enabled=true
-s3.endpoint=http://minio:9000
-s3.path-style-access=true
-s3.aws-access-key=minio
-s3.aws-secret-key=minio12345
 ```
-
-### `trino/catalog/hive.properties`
-
-```ini
-connector.name=hive
-hive.metastore.uri=thrift://hive-metastore:9083
-fs.native-s3.enabled=true
-s3.endpoint=http://minio:9000
-s3.path-style-access=true
-s3.aws-access-key=minio
-s3.aws-secret-key=minio12345
+Bronze → Silver → Gold
 ```
 
 ---
 
-## Airflow DAG Example
-
-`dags/nyc_taxi_lakehouse.py`
-
-```python
-from airflow import DAG
-from airflow.operators.bash import BashOperator
-from airflow.utils.dates import days_ago
-
-default_args = {"owner": "data", "retries": 1}
-
-spark_submit = "/opt/bitnami/spark/bin/spark-submit --master spark://spark-master:7077 " \
-               "--packages io.delta:delta-spark_2.12:3.2.0,org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.262 " \
-               "--conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension " \
-               "--conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog " \
-               "--conf spark.hadoop.fs.s3a.endpoint=http://minio:9000 " \
-               "--conf spark.hadoop.fs.s3a.access.key=minio " \
-               "--conf spark.hadoop.fs.s3a.secret.key=minio12345 " \
-               "--conf spark.hadoop.fs.s3a.path.style.access=true " \
-               "--conf spark.hadoop.fs.s3a.connection.ssl.enabled=false "
-
-with DAG("nyc_taxi_lakehouse",
-         default_args=default_args,
-         schedule_interval=None,
-         start_date=days_ago(1),
-         catchup=False) as dag:
-
-    bronze = BashOperator(
-        task_id="bronze_ingest",
-        bash_command=spark_submit + "/opt/jobs/01_bronze_ingest.py"
-    )
-
-    silver = BashOperator(
-        task_id="silver_transform",
-        bash_command=spark_submit + "/opt/jobs/02_silver_transform.py"
-    )
-
-    gold = BashOperator(
-        task_id="gold_aggregate",
-        bash_command=spark_submit + "/opt/jobs/03_gold_agg.py"
-    )
-
-    bronze >> silver >> gold
-```
-
----
-
-## Querying Data via Trino
-
-You can explore Delta tables directly from Trino’s CLI or Power BI:
+## 🧮 Exemple de Requête Trino
 
 ```sql
-SHOW SCHEMAS IN delta;
-SHOW TABLES IN delta.nyc;
-
 SELECT pickup_date,
        total_trips,
        avg_fare_amount,
        avg_trip_distance,
        total_revenue
 FROM delta.nyc.trips_metrics
-ORDER BY pickup_date;
+ORDER BY pickup_date DESC;
 ```
 
 ---
 
-## Connecting Power BI to Trino
+## 📊 Dashboard Power BI
 
-1. Install the **Trino ODBC Driver**
-   → [Trino ODBC Download](https://trino.io/download.html)
+Le tableau de bord Power BI se connecte à Trino (catalogue `delta`) et permet de :
 
-2. Create a **DSN (Data Source Name)**
+* Suivre le volume quotidien de trajets
+* Visualiser les revenus et distances moyennes
+* Identifier les heures de pointe et tendances mensuelles
+* Explorer les performances par zone géographique
 
-   * Host: `localhost`
-   * Port: `8080`
-   * Catalog: `delta`
-   * Schema: `nyc`
-   * Auth: none (local setup)
-
-3. In Power BI:
-
-   * **Get Data → ODBC → Trino**
-   * Choose `delta.nyc.trips_metrics`
-   * Use **DirectQuery** or **Import** mode
+> *(Ajoutez ici une capture d’écran Power BI — très valorisant pour ton portfolio !)*
 
 ---
 
-## 📈 Example Gold Metrics Table
+## 🔧 Améliorations Futures
 
-| Column              | Description           |
-| ------------------- | --------------------- |
-| `pickup_date`       | Aggregation date      |
-| `total_trips`       | Total number of trips |
-| `avg_fare_amount`   | Average fare          |
-| `avg_trip_distance` | Average distance      |
-| `total_revenue`     | Total revenue per day |
+* [ ] Data Quality Checks avec **Great Expectations**
+* [ ] Monitoring via **Grafana + Prometheus**
+* [ ] Lignée de données avec **OpenLineage**
+* [ ] Intégration CI/CD (**GitHub Actions**)
+* [ ] Déploiement Cloud (AWS S3 + EMR + MWAA)
 
 ---
 
-## Future Improvements
+## 👨‍💻 Auteur
 
-* [ ] Add **Grafana** dashboards for monitoring
-* [ ] Implement **CI/CD** with GitHub Actions
-* [ ] Deploy on **AWS (S3 + EMR + MWAA)**
-* [ ] Integrate **Great Expectations** for data validation
-* [ ] Use **Airflow Sensors** for data arrival checks
-
----
-
-## Author
-
-**Samir **
+**Samir**
 *Data Engineer | Spark & Cloud Enthusiast*
----
-
-## Keywords
-`Apache Spark` • `Delta Lake` • `MinIO` • `Airflow` • `Trino` • `Power BI` • `Docker` • `ETL` • `Data Lakehouse`
 
 ---
+
+## 🧩 Compétences démontrées
+
+> ✅ Orchestration (Airflow)
+> ✅ Distributed ETL (Spark + Delta Lake)
+> ✅ Data Modeling (Bronze/Silver/Gold)
+> ✅ SQL Analytics (Trino, Power BI)
+> ✅ Object Storage (MinIO / S3)
+> ✅ DevOps (Docker Compose, Environment Management)
+
+---
+
+## 🏁 Keywords
+
+`Apache Spark` • `Delta Lake` • `MinIO` • `Airflow` • `Trino` • `Power BI` • `Docker` • `ETL` • `Data Lakehouse` • `Data Engineering`
+
+```
