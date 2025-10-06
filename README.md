@@ -3,7 +3,7 @@
 
 ---
 
-## 🧭 Overview
+## Overview
 This project demonstrates a **modern Lakehouse architecture** using **Apache Spark**, **Delta Lake**, and **MinIO** (an S3-compatible object store), all deployed in **Docker containers**.
 
 We process **NYC Taxi Trips data** (6 months of Parquet & CSV files), applying transformations through **Bronze → Silver → Gold** layers following the **Medallion Architecture** pattern.
