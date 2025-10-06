@@ -20,7 +20,60 @@ The entire environment is containerized with **Docker Compose**:
 - **VS Code / Jupyter** – for data exploration and analysis  
 
 *Architecture Diagram:*  
-![Lakehouse Architecture](images/lakehouse_architecture.png)
+flowchart LR
+  %% ===== Groups =====
+  subgraph DC[Docker Compose Environment]
+    direction LR
+
+    subgraph JUP[Jupyter / VS Code<br/>(Data Exploration)]
+      Jup[Client Notebook]
+    end
+
+    subgraph SP[🥇 Spark Cluster]
+      direction LR
+      SM[(Spark Master<br/>port 7077)]
+      W1[(Spark Worker 1)]
+      W2[(Spark Worker 2)]
+      SM -->|Distributes jobs| W1
+      SM -->|Distributes jobs| W2
+    end
+
+    subgraph MED[🏅 Medallion Layers (Delta on MinIO)]
+      direction TB
+      BR[BRONZE<br/>Raw CSV/Parquet<br/>+ _ingest_ts, _ingest_file<br/><code>s3a://lake/bronze/trips</code>]
+      SI[SILVER<br/>Cleaned / Standardized<br/>Schema + nulls + dedup<br/><code>s3a://lake/silver/trips_cleaned</code>]
+      GO[GOLD<br/>Aggregated KPIs<br/>by day/hour/location<br/><code>s3a://lake/gold/trips_metrics</code>]
+      BR -->|"02_silver_transform.py"| SI
+      SI -->|"03_gold_agg.py"| GO
+    end
+
+    subgraph ST[💾 Storage Layer]
+      direction TB
+      MINIO[(MinIO<br/>S3-compatible<br/>http://localhost:9001)]
+      DELTA[/Delta Lake<br/>ACID & Versioning/]
+      MINIO <--> DELTA
+    end
+
+    subgraph OUT[📊 Analytics]
+      direction TB
+      BI[Dashboards / Notebooks<br/>KPIs: trips, avg fare, distance, revenue]
+    end
+
+    RAW[[Raw Data<br/>(NYC Taxi CSV & Parquet)]]
+
+  end
+
+  %% ===== Flows =====
+  Jup -->|Spark Session / spark-submit| SM
+  RAW -->|"01_bronze_ingest.py"| BR
+  W1 -->|s3a read/write| MINIO
+  W2 -->|s3a read/write| MINIO
+  GO -->|Business tables| BI
+
+  %% visual hints
+  SM -. PySpark jobs .-> BR
+  SM -. PySpark jobs .-> SI
+  SM -. PySpark jobs .-> GO
 
 ---
 
