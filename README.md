@@ -1,102 +1,103 @@
 # 🚖 NYC Taxi Lakehouse Project  
 ### A Complete End-to-End Data Engineering Pipeline with PySpark, Delta Lake, and MinIO
+
 ---
 
-## Overview
-This project builds a **modern Lakehouse architecture** using **Apache Spark**, **Delta Lake**, and **MinIO (S3-compatible object store)**, deployed in **Docker containers**.
+## 🧭 Overview
+This project demonstrates a **modern Lakehouse architecture** using **Apache Spark**, **Delta Lake**, and **MinIO** (an S3-compatible object store), all deployed in **Docker containers**.
 
-We process **NYC Taxi trips data** (6 months of parquet & CSV files), applying transformations through **Bronze → Silver → Gold** layers following the **Medallion Architecture** pattern.
+We process **NYC Taxi Trips data** (6 months of Parquet & CSV files), applying transformations through **Bronze → Silver → Gold** layers following the **Medallion Architecture** pattern.
 
 ---
 
 ## Architecture Overview
 
-The full environment is containerized with Docker Compose:
+The entire environment is containerized with **Docker Compose**:
 
 - **Spark Master & Workers** – distributed processing with PySpark  
-- **MinIO** – S3-compatible data lake storage  
-- **Delta Lake** – transaction layer for data versioning & ACID  
-- **Visual Studio code ** – for exploration and analysis  
+- **MinIO** – S3-compatible object storage  
+- **Delta Lake** – transaction layer for data versioning and ACID compliance  
+- **VS Code / Jupyter** – for data exploration and analysis  
 
-📸 *Architecture Diagram:*  
+*Architecture Diagram:*  
 ![Lakehouse Architecture](images/lakehouse_architecture.png)
 
 ---
 
-## 🔁 Medallion Data Pipeline
+## Medallion Data Pipeline
 
-The project follows the **three-layer Medallion Architecture**:
+This project follows the **three-layer Medallion Architecture** pattern:
 
-| Layer | Description | Output Example |
+| Layer | Description | Example Output |
 |-------|--------------|----------------|
-| **Bronze** | Raw ingestion layer – load data “as-is” from source into Delta tables | `s3a://lake/bronze/trips` |
-| **Silver** | Cleaned & standardized data with proper schema and null handling | `s3a://lake/silver/trips_cleaned` |
-| **Gold** | Aggregated & business-ready analytics tables | `s3a://lake/gold/trips_metrics` |
+| **Bronze** | Raw ingestion layer – loads data *as-is* from source into Delta tables | `s3a://lake/bronze/trips` |
+| **Silver** | Cleaned & standardized data with enforced schema and null handling | `s3a://lake/silver/trips_cleaned` |
+| **Gold** | Aggregated, business-ready analytics tables | `s3a://lake/gold/trips_metrics` |
 
 📸 *Medallion Layers:*  
 ![Medallion Architecture](images/medallion_layers.png)
 
 ---
 
-## ⚙️ Data Flow
+## Data Flow
 
-1. **Raw Data Ingestion (Bronze)**
-   - Loads raw `.csv` and `.parquet` files
+1. **Raw Data Ingestion (Bronze)**  
+   - Loads raw `.csv` and `.parquet` files  
    - Adds metadata columns (`_ingest_file`, `_ingest_ts`)
 
-2. **Transformation & Cleaning (Silver)**
-   - Cleans nulls, fixes schema, rounds numeric columns
-   - Removes duplicates
+2. **Transformation & Cleaning (Silver)**  
+   - Handles nulls and schema consistency  
+   - Cleans numeric precision, removes duplicates  
 
-3. **Aggregation (Gold)**
-   - Aggregates by day/hour/location
-   - Computes KPIs: total trips, avg fare, avg distance, total revenue
+3. **Aggregation (Gold)**  
+   - Aggregates by day/hour/location  
+   - Computes KPIs: total trips, average fare, average distance, total revenue  
 
-📸 *Data Flow Diagram:*  
+*Data Flow Diagram:*  
 ![Data Flow](images/data_flow.png)
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack
 
 | Component | Technology |
 |------------|-------------|
 | **Data Processing** | Apache Spark (PySpark) |
-| **Storage Layer** | Delta Lake |
+| **Storage Format** | Delta Lake |
 | **Data Lake** | MinIO (S3-compatible) |
 | **Containerization** | Docker & Docker Compose |
 | **Scripting** | Python |
-| **Visualization (optional)** | Jupyter Notebooks |
+| **Exploration** | Jupyter / VS Code |
 
 ---
 
-## 🚀 How to Run the Project
+## How to Run the Project
 
-### 1️⃣ Clone the repository
+### 1️ Clone the Repository
 ```bash
 git clone https://github.com/<your-username>/nyc-taxi-lakehouse.git
 cd nyc-taxi-lakehouse/01_lakehouse
 ````
 
-### 2️⃣ Start all services
+### 2️ Start All Services
 
 ```bash
 docker compose up -d --build
 ```
 
-### 3️⃣ Access MinIO
+### 3️ Access MinIO
 
 * **URL:** [http://localhost:9001](http://localhost:9001)
 * **Username:** `minio`
 * **Password:** `minio12345`
 
-### 4️⃣ Open a Spark Worker shell
+### 4️ Open a Spark Worker Shell
 
 ```bash
 docker compose exec -it spark-worker bash
 ```
 
-### 5️⃣ Run each ETL job sequentially
+### 5️ Run the ETL Jobs Sequentially
 
 ```bash
 # Bronze
@@ -112,7 +113,7 @@ docker compose exec -it spark-worker bash
   /opt/jobs/01_bronze_ingest.py
 ```
 
-Then:
+Then run:
 
 ```bash
 /opt/bitnami/spark/bin/spark-submit ... /opt/jobs/02_silver_transform.py
@@ -121,9 +122,9 @@ Then:
 
 ---
 
-## ✅ Verifying Each Layer
+## Verifying Each Layer
 
-### Check row counts in Spark SQL:
+Check row counts with Spark SQL:
 
 ```bash
 /opt/bitnami/spark/bin/spark-sql \
@@ -137,11 +138,11 @@ Repeat for:
 * `s3a://lake/silver/trips_cleaned`
 * `s3a://lake/gold/trips_metrics`
 
-Or check visually in **MinIO → Buckets → lake → bronze/silver/gold**
+Or explore visually in **MinIO → Buckets → lake → bronze/silver/gold**
 
 ---
 
-## 📈 Example Results
+## Example Results
 
 | Layer  | Table                 | Row Count | Description              |
 | ------ | --------------------- | --------- | ------------------------ |
@@ -151,12 +152,12 @@ Or check visually in **MinIO → Buckets → lake → bronze/silver/gold**
 
 ---
 
-## 🌟 Future Improvements
+## Future Improvements
 
-* Integrate **Airflow** or **Dagster** for orchestration
-* Add **Grafana dashboards** for Gold layer metrics
-* Deploy on **AWS S3 & EMR** for scalability
-* Add **CI/CD with GitHub Actions**
+* Add **Airflow** or **Dagster** for orchestration
+* Integrate **Grafana dashboards** for Gold metrics
+* Deploy to **AWS S3 & EMR** for scalability
+* Add **CI/CD** with GitHub Actions
 
 ---
 
@@ -164,27 +165,10 @@ Or check visually in **MinIO → Buckets → lake → bronze/silver/gold**
 
 **Samir SC**
 Data Engineer | Spark & Cloud Enthusiast
-🔗 [LinkedIn](https://linkedin.com) • [GitHub](https://github.com)
 
 ---
 
 📦 *Technologies:*
 `Apache Spark` • `Delta Lake` • `MinIO` • `Docker` • `PySpark` • `ETL` • `Data Engineering`
 
-```
-
----
-
-## 🖼️ À propos des images à inclure
-
-Place-les dans un dossier `images/` à la racine du repo :
-
-| Nom du fichier | Description |
-|----------------|--------------|
-| `lakehouse_architecture.png` | Schéma général (Spark, Docker, MinIO, Delta) |
-| `medallion_layers.png` | Représentation Bronze → Silver → Gold |
-| `data_flow.png` | Flux de transformation complet |
-
-Je peux te générer ces 3 images **avec un style pro (fond sombre, style cloud, logos inclus)** — veux-tu que je les crée maintenant pour toi ?  
-👉 Cela rendra ton README **visuellement impressionnant** et prêt à publier sur GitHub.
 ```
