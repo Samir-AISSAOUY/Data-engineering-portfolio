@@ -34,7 +34,7 @@ This project follows the **three-layer Medallion Architecture** pattern:
 | **Silver** | Cleaned & standardized data with enforced schema and null handling | `s3a://lake/silver/trips_cleaned` |
 | **Gold** | Aggregated, business-ready analytics tables | `s3a://lake/gold/trips_metrics` |
 
-📸 *Medallion Layers:*  
+*Medallion Layers:*  
 ![Medallion Architecture](images/medallion_layers.png)
 
 ---
@@ -161,14 +161,14 @@ Or explore visually in **MinIO → Buckets → lake → bronze/silver/gold**
 
 ---
 
-## 👨‍💻 Author
+## Author
 
 **Samir SC**
 Data Engineer | Spark & Cloud Enthusiast
 
 ---
 
-📦 *Technologies:*
+*Technologies:*
 `Apache Spark` • `Delta Lake` • `MinIO` • `Docker` • `PySpark` • `ETL` • `Data Engineering`
 
 ```
