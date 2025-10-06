@@ -1,4 +1,4 @@
-```markdown
+
 # 🚖 NYC Taxi Lakehouse — End-to-End Data Engineering Project
 
 ### *(Docker • Airflow • Spark • Delta Lake • MinIO • Trino • Power BI)*
